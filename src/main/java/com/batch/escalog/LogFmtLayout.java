@@ -20,7 +20,7 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
     private static final String LOGFMT_CLASS = com.batch.escalog.LogFmt.class.getName();
     private static final String LOGFMTBUILDER_CLASS = com.batch.escalog.LogFmtBuilder.class.getName();
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
 
 // ----------------------------------->
@@ -61,7 +61,13 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
     /**
      * Formats the time field
      */
-    private ThreadLocal<SimpleDateFormat> simpleDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat(timeFormat != null ? timeFormat : DATE_FORMAT));
+    private SimpleDateFormat newDf(String strformat) {
+        SimpleDateFormat sdf = new SimpleDateFormat(strformat);
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return sdf;
+    }
+
+    private ThreadLocal<SimpleDateFormat> simpleDateFormat = ThreadLocal.withInitial(() -> newDf(timeFormat != null ? timeFormat : DATE_FORMAT));
 
 
 
@@ -70,16 +76,12 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         appenders.put(TIME.toString(),      this::timeAppender);
         appenders.put(LEVEL.toString(),     this::levelAppender);
         appenders.put(MESSAGE.toString(),   this::msgAppender);
-        appenders.put(THREAD.toString(),    this::threadAppender);
-        appenders.put("package",            this::packageAppender);
-        appenders.put("module",             this::moduleAppender);
-        appenders.put("mdc",                this::mdcAppender);
-        appenders.put("custom",             this::customFieldsAppender);
-        appenders.put(ERROR.toString(),     this::errorAppender);
+        appenders.put(TNAME.toString(),     this::threadAppender);
+        appenders.put(EXCEPTION.toString(), this::errorAppender);
+        appenders.put(LOGGER.toString(),    this::classAppender);
 
         this.defaultAppenders = new ArrayList<>(Arrays.asList(
-            this::timeAppender, this::levelAppender,this::threadAppender, this::packageAppender, this::moduleAppender,
-            this::msgAppender, this::mdcAppender, this::customFieldsAppender, this::errorAppender
+            this::timeAppender, this::levelAppender,this::threadAppender, this::classAppender, this::msgAppender, this::errorAppender
         ));
     }
 
@@ -133,7 +135,7 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         // app_name
         if ( appName != null )
         {
-            appendKeyValueAndEscape(sb, APP.toString(), appName);
+            appendKeyValueAndEscape(sb, PNAME.toString(), appName);
         }
 
         for ( KeyValueAppender keyValueAppender : customAppenders != null ? customAppenders : defaultAppenders )
@@ -160,7 +162,7 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 
     private void threadAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
     {
-        appendKeyValueAndEscape(sb, THREAD.toString(), iLoggingEvent.getThreadName());
+        appendKeyValueAndEscape(sb, TNAME.toString(), iLoggingEvent.getThreadName());
     }
 
     private void msgAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
@@ -168,65 +170,20 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         appendKeyValueAndEscape(sb, MESSAGE.toString(), iLoggingEvent.getFormattedMessage());
     }
 
-    private void mdcAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
-    {
-        Map<String, String> mdc = iLoggingEvent.getMDCPropertyMap();
-        if ( mdc != null )
-        {
-            mdc.forEach((k, v) ->
-            {
-                if ( !isNativeKey(k) )
-                {
-                    appendKeyValueAndEscape(sb, k, v);
-                }
-            });
-        }
-    }
-
-    private void customFieldsAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
-    {
-        Marker marker = iLoggingEvent.getMarker();
-        if ( marker != null && marker instanceof LogFmtMarker )
-        {
-            LogFmtMarker keyValueMarker = (LogFmtMarker) marker;
-            keyValueMarker.forEach((k, v) ->
-            {
-                if ( !isNativeKey(k) )
-                {
-                    appendKeyValueAndEscape(sb, k, v);
-                }
-            });
-        }
-    }
-
     private void errorAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
     {
         if ( iLoggingEvent.getThrowableProxy() != null )
         {
-            appendKeyValueAndEscape(sb, ERROR.toString(), ThrowableProxyUtil.asString(iLoggingEvent.getThrowableProxy()));
+            appendKeyValueAndEscape(sb, EXCEPTION.toString(), ThrowableProxyUtil.asString(iLoggingEvent.getThrowableProxy()));
         }
     }
 
-    private void packageAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    private void classAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
     {
         String className = getLastClassName(iLoggingEvent.getCallerData());
         if ( className != null )
         {
-            int lastPointPosition = className.lastIndexOf('.');
-            String pkg = lastPointPosition >= 0 ? className.substring(0, lastPointPosition) : "";
-            appendKeyValueAndEscape(sb, PACKAGE.toString(), pkg);
-        }
-
-    }
-
-    private void moduleAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
-    {
-        String className = getLastClassName(iLoggingEvent.getCallerData());
-        if ( className != null )
-        {
-            int lastPointPosition = className.lastIndexOf('.');
-            String module = lastPointPosition >= 0 ? className.substring(lastPointPosition + 1, className.length()) : className;
-            appendKeyValueAndEscape(sb, MODULE.toString(), module);
+            appendKeyValueAndEscape(sb, LOGGER.toString(), className);
         }
 
     }
@@ -338,11 +295,6 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
 
     private static String formatLogLevel(Level level)
     {
-        if ( level == Level.WARN )
-        {
-            return "warning";
-        }
-
         return level.toString().toLowerCase();
     }
 
@@ -355,11 +307,12 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         TIME("time"),
         LEVEL("level"),
         MESSAGE("msg"),
-        APP("app"),
-        THREAD("thread"),
-        PACKAGE("package"),
-        MODULE("module"),
-        ERROR("error");
+        PNAME("pname"),
+        TNAME("tname"),
+        LOGGER("logger"),
+        PID("pid"),
+        TID("tid"),
+        EXCEPTION("exception");
 
     // ----------------------------------->
 

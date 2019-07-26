@@ -8,10 +8,8 @@ import org.junit.Test;
 import org.slf4j.Marker;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.ZoneId;
+import java.util.*;
 
 import static com.batch.escalog.LogFmtLayout.escapeValue;
 import static com.batch.escalog.LogFmtMarker.with;
@@ -27,7 +25,7 @@ public class LogFmtLayoutTest
     @Test
     public void escapeTest()
     {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         System.out.println(sdf.format(new Date()));
         assertEquals("the \\\"message\\\"", escapeValue("the \"message\"").toString());
         assertEquals("the \\n carriage \\n return", escapeValue("the \n carriage \n return").toString());
@@ -48,13 +46,14 @@ public class LogFmtLayoutTest
         logFmtLayout.setPrefix(prefix);
 
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         calendar.set(2017, Calendar.NOVEMBER, 30, 15, 10, 25);
         ILoggingEvent loggingEvent = createLoggingEvent("thread0", Level.DEBUG, calendar.getTime(),
             with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"", null);
 
 
         assertEquals(
-            "prefix=\"prefix\" app=escalog time=\"2017-11-30T15:10:25\" level=debug thread=thread0 msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
+            "prefix=\"prefix\" pname=escalog time=\"2017-11-30T15:10:25Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\"\n",
             logFmtLayout.doLayout(loggingEvent)
         );
 
@@ -77,7 +76,7 @@ public class LogFmtLayoutTest
             with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"", mdc);
 
         assertEquals(
-            "time=2017 mdckey=\"mdc value\" key1=value1 key2=\"val ue2\" level=debug msg=\"message with \\\"double quotes\\\"\"\n",
+            "time=2017 level=debug msg=\"message with \\\"double quotes\\\"\"\n",
             logFmtLayout.doLayout(loggingEvent)
         );
     }
