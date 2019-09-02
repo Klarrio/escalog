@@ -20,7 +20,7 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
     private static final String LOGFMT_CLASS = com.batch.escalog.LogFmt.class.getName();
     private static final String LOGFMTBUILDER_CLASS = com.batch.escalog.LogFmtBuilder.class.getName();
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
 
 // ----------------------------------->

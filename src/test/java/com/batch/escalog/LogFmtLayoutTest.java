@@ -48,13 +48,41 @@ public class LogFmtLayoutTest
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         calendar.set(2017, Calendar.NOVEMBER, 30, 15, 10, 25);
+        calendar.set(Calendar.MILLISECOND, 123);
         ILoggingEvent loggingEvent = createLoggingEvent("thread0", Level.DEBUG, calendar.getTime(),
             with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"", null);
 
 
         assertEquals(
-            "prefix=\"prefix\" pname=escalog time=\"2017-11-30T15:10:25Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\"\n",
+            "prefix=\"prefix\" pname=escalog time=\"2017-11-30T15:10:25.123Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\"\n",
             logFmtLayout.doLayout(loggingEvent)
+        );
+
+    }
+
+    @Test
+    public void timeZoneTest()
+    {
+
+        String appName = "escalog";
+        String prefix = "prefix=\"prefix\"";
+
+        LogFmtLayout logFmtLayout = new LogFmtLayout();
+
+        logFmtLayout.setAppName(appName);
+        logFmtLayout.setPrefix(prefix);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT+4"));
+        calendar.set(2017, Calendar.NOVEMBER, 30, 15, 10, 25);
+        calendar.set(Calendar.MILLISECOND, 123);
+        ILoggingEvent loggingEvent = createLoggingEvent("thread0", Level.DEBUG, calendar.getTime(),
+                with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"", null);
+
+
+        assertEquals(
+                "prefix=\"prefix\" pname=escalog time=\"2017-11-30T11:10:25.123Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\"\n",
+                logFmtLayout.doLayout(loggingEvent)
         );
 
     }
