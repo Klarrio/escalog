@@ -79,9 +79,10 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         appenders.put(TNAME.toString(),     this::threadAppender);
         appenders.put(EXCEPTION.toString(), this::errorAppender);
         appenders.put(LOGGER.toString(),    this::classAppender);
+        appenders.put("custom",             this::customFieldsAppender);
 
         this.defaultAppenders = new ArrayList<>(Arrays.asList(
-            this::timeAppender, this::levelAppender,this::threadAppender, this::classAppender, this::msgAppender, this::errorAppender
+            this::timeAppender, this::levelAppender,this::threadAppender, this::classAppender, this::msgAppender, this::errorAppender, this::customFieldsAppender
         ));
     }
 
@@ -186,6 +187,22 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
             appendKeyValueAndEscape(sb, LOGGER.toString(), className);
         }
 
+    }
+
+    private void customFieldsAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        Marker marker = iLoggingEvent.getMarker();
+        if ( marker != null && marker instanceof LogFmtMarker )
+        {
+            LogFmtMarker keyValueMarker = (LogFmtMarker) marker;
+            keyValueMarker.forEach((k, v) ->
+            {
+                if ( !isNativeKey(k) )
+                {
+                    appendKeyValueAndEscape(sb, k, v);
+                }
+            });
+        }
     }
 
     private String getLastClassName(StackTraceElement[] callerData)

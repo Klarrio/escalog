@@ -54,7 +54,7 @@ public class LogFmtLayoutTest
 
 
         assertEquals(
-            "prefix=\"prefix\" pname=escalog time=\"2017-11-30T15:10:25.123Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\"\n",
+            "prefix=\"prefix\" pname=escalog time=\"2017-11-30T15:10:25.123Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
             logFmtLayout.doLayout(loggingEvent)
         );
 
@@ -81,7 +81,7 @@ public class LogFmtLayoutTest
 
 
         assertEquals(
-                "prefix=\"prefix\" pname=escalog time=\"2017-11-30T11:10:25.123Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\"\n",
+                "prefix=\"prefix\" pname=escalog time=\"2017-11-30T11:10:25.123Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
                 logFmtLayout.doLayout(loggingEvent)
         );
 
@@ -91,7 +91,7 @@ public class LogFmtLayoutTest
     public void fieldsConfigTest()
     {
         LogFmtLayout logFmtLayout = new LogFmtLayout();
-        logFmtLayout.setFields("time, mdc, custom, level, msg");
+        logFmtLayout.setFields("time, mdc, level, msg, custom");
         logFmtLayout.setTimeFormat("YYYY");
 
         Calendar calendar = Calendar.getInstance();
@@ -104,7 +104,7 @@ public class LogFmtLayoutTest
             with("key1", "value1").and("key2", "val ue2"), "message with \"double quotes\"", mdc);
 
         assertEquals(
-            "time=2017 level=debug msg=\"message with \\\"double quotes\\\"\"\n",
+            "time=2017 level=debug msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
             logFmtLayout.doLayout(loggingEvent)
         );
     }

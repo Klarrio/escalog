@@ -50,15 +50,15 @@ public class LogFmtTest
     {
         logger.with("key1", "value1").info("here is the message");
         String line = getEndLog(layoutProducer.consume());
-        assertEquals("msg=\"here is the message\"\n", line);
+        assertEquals("msg=\"here is the message\" key1=value1\n", line);
 
         logger.with("key with spaces", "value with spaces").info("message with sequences : \n \r \\");
         line = getEndLog(layoutProducer.consume());
-        assertEquals("msg=\"message with sequences : \\n \\r \\\\\"\n", line);
+        assertEquals("msg=\"message with sequences : \\n \\r \\\\\" key with spaces=\"value with spaces\"\n", line);
 
         logger.with("key1", "value1").and("keyInt", 143).and("keyBool", true).info("message-without-spaces");
         line = getEndLog(layoutProducer.consume());
-        assertEquals("msg=message-without-spaces\n", line);
+        assertEquals("msg=message-without-spaces key1=value1 keyInt=143 keyBool=true\n", line);
 
     }
 
