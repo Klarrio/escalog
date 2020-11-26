@@ -54,7 +54,7 @@ public class LogFmtLayoutTest
 
 
         assertEquals(
-            "prefix=\"prefix\" pname=escalog time=\"2017-11-30T15:10:25.123Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
+            "prefix=\"prefix\" pname=escalog time=\"2017-11-30T15:10:25.123Z\" level=debug tname=thread0 logger=loggerName msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
             logFmtLayout.doLayout(loggingEvent)
         );
 
@@ -81,7 +81,7 @@ public class LogFmtLayoutTest
 
 
         assertEquals(
-                "prefix=\"prefix\" pname=escalog time=\"2017-11-30T11:10:25.123Z\" level=debug tname=thread0 msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
+                "prefix=\"prefix\" pname=escalog time=\"2017-11-30T11:10:25.123Z\" level=debug tname=thread0 logger=loggerName msg=\"message with \\\"double quotes\\\"\" key1=value1 key2=\"val ue2\"\n",
                 logFmtLayout.doLayout(loggingEvent)
         );
 

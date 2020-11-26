@@ -78,11 +78,11 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         appenders.put(MESSAGE.toString(),   this::msgAppender);
         appenders.put(TNAME.toString(),     this::threadAppender);
         appenders.put(EXCEPTION.toString(), this::errorAppender);
-        appenders.put(LOGGER.toString(),    this::classAppender);
-        appenders.put("custom",             this::customFieldsAppender);
+        appenders.put(LOGGER.toString(),    this::loggerAppender);
+        appenders.put("custom",          this::customFieldsAppender);
 
         this.defaultAppenders = new ArrayList<>(Arrays.asList(
-            this::timeAppender, this::levelAppender,this::threadAppender, this::classAppender, this::msgAppender, this::errorAppender, this::customFieldsAppender
+            this::timeAppender, this::levelAppender,this::threadAppender, this::loggerAppender, this::msgAppender, this::errorAppender, this::customFieldsAppender
         ));
     }
 
@@ -150,6 +150,10 @@ public class LogFmtLayout extends LayoutBase<ILoggingEvent>
         return sb.toString();
     }
 
+    private void loggerAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
+    {
+        appendKeyValueAndEscape(sb, LOGGER.toString(), iLoggingEvent.getLoggerName());
+    }
 
     private void levelAppender(StringBuilder sb, ILoggingEvent iLoggingEvent)
     {
